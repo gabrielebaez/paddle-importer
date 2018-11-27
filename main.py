@@ -1,6 +1,6 @@
 from dotenv import load_dotenv, find_dotenv
+import pandas as pd
 import requests
-import json
 import os
 
 load_dotenv(find_dotenv())
@@ -12,7 +12,7 @@ def base_url(route, resource):
             vendor_auth_code={os.getenv('VENDOR_AUTH_CODE')}"
 
 
-def get_products():
+def get_products(save=True):
     url = base_url('product', 'get_products')
     r = requests.post(url)
     r = r.json()
@@ -28,10 +28,15 @@ def get_products():
             "icon": data['icon']
         }
 
-    return [_format(i) for i in r['response']['products']]
+    data = pd.DataFrame([_format(i) for i in r['response']['products']])
+
+    if save:
+        data.to_csv('products.csv', index=False)
+    else:
+        return data
 
 
-def get_users():
+def get_users(save=True):
     url = base_url('subscription','users')
     r = requests.post(url)
     r = r.json()
@@ -51,10 +56,15 @@ def get_users():
             "next_payment_date": data['next_payment']['date']
         }
 
-    return [_format(i) for i in r['response']]
+    data = pd.DataFrame([_format(i) for i in r['response']])
+
+    if save:
+        data.to_csv('users.csv', index=False)
+    else:
+        return data
 
 
-def get_payments():
+def get_payments(save=True):
 
     url = base_url('subscription','payments')
     r = requests.post(url)
@@ -72,9 +82,15 @@ def get_payments():
             "receipt_url": data["receipt_url"] if 'receip_url' in data else ''
         }
 
-    return [_format(i) for i in r['response']]
+    data = pd.DataFrame([_format(i) for i in r['response']])
+
+    if save:
+        data.to_csv('payments.csv', index=False)
+    else:
+        return data
 
 
 if __name__ == '__main__':
-    for i in get_payments():
-        print(i)
+    get_payments()
+    get_products()
+    get_users()
